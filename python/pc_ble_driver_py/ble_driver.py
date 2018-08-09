@@ -842,7 +842,7 @@ class BLEHci(Enum):
 class BLEUUIDBase(object):
     def __init__(self, vs_uuid_base=None, uuid_type=None):
         assert isinstance(vs_uuid_base, (list, NoneType)), 'Invalid argument type'
-        assert isinstance(uuid_type, (int, long, NoneType)), 'Invalid argument type'
+        assert isinstance(uuid_type, (int, NoneType)), 'Invalid argument type'
         if (vs_uuid_base is None) and uuid_type is None:
             self.base   = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
                            0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB]
@@ -1184,7 +1184,7 @@ class BLEDriver(object):
         dlen = driver.uint32_value(arr_len)
 
         descs   = util.serial_port_desc_array_to_list(c_desc_arr, dlen)
-        return map(SerialPortDescriptor.from_c, descs)
+        return list(map(SerialPortDescriptor.from_c, descs))
 
 
     @NordicSemiErrorCheck

@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-import Queue
+import queue
 import logging
 import wrapt
 from threading  import Condition, Lock
@@ -214,7 +214,7 @@ class BLEAdapter(BLEDriverObserver):
                 response = self.evt_sync[conn_handle].wait(evt = BLEEvtID.gattc_evt_char_disc_rsp)
 
                 if response['status'] == BLEGattStatusCode.success:
-                    map(s.char_add, response['characteristics'])
+                    list(map(s.char_add, response['characteristics']))
                 elif response['status'] == BLEGattStatusCode.attribute_not_found:
                     break
                 else:
