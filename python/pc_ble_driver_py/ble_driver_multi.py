@@ -181,7 +181,6 @@ class _ObserverMulti(object):
                                 descriptors=descriptors))
 
     def on_gap_evt_auth_status(self, ble_driver, conn_handle, error_src, bonded, sm1_levels, sm2_levels, kdist_own, kdist_peer, auth_status):
-        log.error("on_gap_evt_auth_status")
         self.event_q.put(_Event('on_gap_evt_auth_status',
                                conn_handle  = conn_handle,
                                error_src    = error_src,

@@ -1728,7 +1728,6 @@ class BLEDriver(object):
                                                      conn_params=BLEGapConnParams.from_c(conn_params))
 
             elif evt_id == BLEEvtID.gap_evt_auth_status:
-                logger.critical('ble_driver.AUTH_STATUS')
                 auth_status_evt = ble_event.evt.gap_evt.params.auth_status
 
                 for obs in self.observers:
