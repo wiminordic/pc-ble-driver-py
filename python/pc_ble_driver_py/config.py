@@ -41,19 +41,34 @@
 #
 # * "NRF51"
 # * "NRF52"
+import json
+import os
+
 __conn_ic_id__ = None
 
 
-def sd_api_ver_get():
+def _get_conn_ic_id():
+    global __conn_ic_id__
     if __conn_ic_id__ is None:
-        raise RuntimeError('Connectivity IC identifier __conn_ic_id__ is not set')
+        for i in [os.path.join(os.getcwd(), 'pc_ble_driver_config.json'), 'c:/tmp/pc_ble_driver_config.json']:
+            try:
+                with open(i, 'r') as f:
+                    conf = json.load(f)
+                return conf['conn_ic_id']
+            except (FileNotFoundError, TypeError):
+                pass
+    else:
+        return __conn_ic_id__
+    raise RuntimeError('Connectivity IC identifier __conn_ic_id__ not set and not found in config file')
 
-    if __conn_ic_id__.upper() == "NRF51":
+def sd_api_ver_get():
+    conn_id_ic = _get_conn_ic_id()
+    if conn_id_ic.upper() == "NRF51":
         _sd_api_v = 2
-    elif __conn_ic_id__.upper() == "NRF52":
+    elif conn_id_ic.upper() == "NRF52":
         _sd_api_v = 3
     else:
-        raise RuntimeError('Invalid connectivity IC identifier: {}.'.format(__conn_ic_id__))
+        raise RuntimeError('Invalid connectivity IC identifier: {}.'.format(conn_id_ic))
     return _sd_api_v
 
 
@@ -69,7 +84,7 @@ def conn_ic_hex_get():
     elif __conn_ic_id__.upper() == "NRF52":
         return os.path.join(os.path.dirname(__file__),
                         'hex', 'sd_api_v3',
-                        'connectivity_1.2.0_115k2_with_s132_3.0.hex')
+                        'connectivity_1.2.0_1m_with_s132_3.0.hex')
     else:
         raise RuntimeError('Invalid connectivity IC identifier: {}.'.format(__conn_ic_id__))
 
@@ -79,4 +94,4 @@ def get_connectivity_hex_version():
 
 
 def get_connectivity_hex_baud_rate():
-    return 115200
+    return 1000000

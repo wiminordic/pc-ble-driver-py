@@ -89,6 +89,14 @@ class _ObserverMulti(object):
                                 conn_handle=conn_handle,
                                 reason=reason))
 
+    def on_gap_evt_sec_request(self, ble_driver, conn_handle, bond, mitm, lesc, keypress):
+        self.event_q.put(_Event('on_gap_evt_sec_request',
+                                conn_handle=conn_handle,
+                                bond=bond,
+                                mitm=mitm,
+                                lesc=lesc,
+                                keypress=keypress))
+
     def on_gap_evt_sec_params_request(self, ble_driver, conn_handle, peer_params):
         self.event_q.put(_Event('on_gap_evt_sec_params_request',
                                 conn_handle=conn_handle,
@@ -116,6 +124,10 @@ class _ObserverMulti(object):
                                 rssi=rssi,
                                 adv_type=adv_type,
                                 adv_data=adv_data))
+
+    def on_evt_data_length_changed(self, ble_driver, conn_handle):
+        self.event_q.put(_Event('on_evt_data_length_changed',
+                                conn_handle=conn_handle))                                
 
     def on_evt_tx_complete(self, ble_driver, conn_handle, count):
         self.event_q.put(_Event('on_evt_tx_complete',
@@ -162,23 +174,28 @@ class _ObserverMulti(object):
                                 status=status,
                                 characteristics=characteristics))
 
-    def on_gattc_evt_desc_disc_rsp(self, ble_driver, conn_handle, status, descriptions):
+    def on_gattc_evt_desc_disc_rsp(self, ble_driver, conn_handle, status, descriptors):
         self.event_q.put(_Event('on_gattc_evt_desc_disc_rsp',
                                 conn_handle=conn_handle,
                                 status=status,
-                                descriptions=descriptions))
+                                descriptors=descriptors))
 
-    def on_gap_evt_auth_status(self, ble_driver, conn_handle, auth_status):
+    def on_gap_evt_auth_status(self, ble_driver, conn_handle, error_src, bonded, sm1_levels, sm2_levels, kdist_own, kdist_peer, auth_status):
+        log.error("on_gap_evt_auth_status")
         self.event_q.put(_Event('on_gap_evt_auth_status',
-                                conn_handle=conn_handle,
-                                auth_status=auth_status))
+                               conn_handle  = conn_handle,
+                               error_src    = error_src,
+                               bonded       = bonded,
+                               sm1_levels   = sm1_levels,
+                               sm2_levels   = sm2_levels,
+                               kdist_own    = kdist_own,
+                               kdist_peer   = kdist_peer,
+                               auth_status  = auth_status))
 
-    def on_gap_evt_conn_sec_update(self, ble_driver, conn_handle, sec_lvl, sec_mode, encr_key_size):
+    def on_gap_evt_conn_sec_update(self, ble_driver, conn_handle, conn_sec):
         self.event_q.put(_Event('on_gap_evt_conn_sec_update',
                                 conn_handle=conn_handle,
-                                sec_lvl=sec_lvl,
-                                sec_mode=sec_mode,
-                                encr_key_size=encr_key_size))
+                                conn_sec=conn_sec))
 
     def on_gattc_evt_write_cmd_tx_complete(self, ble_driver, conn_handle, count):
         self.event_q.put(_Event('on_gattc_evt_write_cmd_tx_complete',
@@ -296,8 +313,8 @@ class BLEDriverMulti(object):
     def observer_unregister(self, observer):
         self.observers.remove(observer)
 
-    def ble_enable(self):
-        self.command_q.put(_Command('ble_enable'))
+    def ble_enable(self, ble_enable_params=None):
+        self.command_q.put(_Command('ble_enable', ble_enable_params=ble_enable_params))
         return self._wait_for_result()
 
     def ble_cfg_set(self, cfg_id, cfg):
@@ -324,8 +341,8 @@ class BLEDriverMulti(object):
         self.command_q.put(_Command('ble_gap_scan_stop'))
         return self._wait_for_result()
 
-    def ble_gap_connect(self, address, scan_params=None, conn_params=None, tag=0):
-        self.command_q.put(_Command('ble_gap_connect', address, scan_params=scan_params, conn_params=conn_params, tag=tag))
+    def ble_gap_connect(self, address, scan_params=None, conn_params=None):
+        self.command_q.put(_Command('ble_gap_connect', address, scan_params=scan_params, conn_params=conn_params))
         return self._wait_for_result()
 
     def ble_gap_disconnect(self, conn_handle, hci_status_code = BLEHci.remote_user_terminated_connection):
@@ -340,8 +357,8 @@ class BLEDriverMulti(object):
         self.command_q.put(_Command('ble_gap_authenticate', conn_handle, sec_params))
         return self._wait_for_result()
 
-    def ble_gap_sec_params_reply(self, conn_handle, sec_status, sec_params, own_keys, peer_keys):
-        self.command_q.put(_Command('ble_gap_sec_params_reply', conn_handle, sec_status, sec_params, own_keys, peer_keys))
+    def ble_gap_sec_params_reply(self, conn_handle, sec_status, sec_params):
+        self.command_q.put(_Command('ble_gap_sec_params_reply', conn_handle, sec_status, sec_params))
         return self._wait_for_result()
 
     def ble_gap_data_length_update(self, conn_handle, data_length_params, data_length_limitation):
