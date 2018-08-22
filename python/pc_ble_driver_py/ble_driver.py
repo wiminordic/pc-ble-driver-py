@@ -1495,6 +1495,10 @@ class BLEDriver(object):
     @NordicSemiErrorCheck
     @wrapt.synchronized(api_lock)
     def ble_gap_encrypt(self, conn_handle, master_id, enc_info):
+        if not master_id or not enc_info:
+            keyset = BLEGapSecKeyset.from_c(self._keyset)
+            master_id = keyset.keys_peer.enc_key.master_id
+            enc_info = keyset.keys_peer.enc_key.enc_info
         assert isinstance(master_id, BLEGapMasterId), 'Invalid argument type'
         assert isinstance(enc_info, BLEGapEncInfo), 'Invalid argument type'
         return driver.sd_ble_gap_encrypt(self.rpc_adapter,
