@@ -338,8 +338,11 @@ class BLEAdapter(BLEDriverObserver):
         return self.disable_notification(conn_handle, uuid)
 
 
+    @NordicSemiErrorCheck(expected = BLEGattStatusCode.success)
     def conn_param_update(self, conn_handle, conn_params):
         self.driver.ble_gap_conn_param_update(conn_handle, conn_params)
+        result = self.evt_sync[conn_handle].wait(evt=BLEEvtID.gap_evt_conn_param_update)
+        return result['status']
 
 
     @NordicSemiErrorCheck(expected = BLEGattStatusCode.success)
@@ -360,7 +363,7 @@ class BLEAdapter(BLEDriverObserver):
     @NordicSemiErrorCheck(expected = BLEGattStatusCode.success)
     def write_prep(self, conn_handle, uuid, data, offset):
         handle = self.db_conns[conn_handle].get_char_value_handle(uuid)
-        if handle == None:
+        if handle is None:
             raise NordicSemiException('Characteristic value handler not found')
         write_params = BLEGattcWriteParams(BLEGattWriteOperation.prepare_write_req,
                                            BLEGattExecWriteFlag.prepared_write,
@@ -499,6 +502,9 @@ class BLEAdapter(BLEDriverObserver):
     def on_gap_evt_sec_request(self, ble_driver, conn_handle, **kwargs):
         self.evt_sync[conn_handle].notify(evt=BLEEvtID.gap_evt_sec_request, data=kwargs)
 
+    def on_gap_evt_lesc_dhkey_request(self, ble_driver, conn_handle, **kwargs):
+        self.evt_sync[conn_handle].notify(evt=BLEEvtID.gap_evt_lesc_dhkey_request, data=kwargs)
+
     def on_gap_evt_auth_status(self, ble_driver, conn_handle, **kwargs):
         self.evt_sync[conn_handle].notify(evt = BLEEvtID.gap_evt_auth_status, data = kwargs)
 
@@ -510,6 +516,9 @@ class BLEAdapter(BLEDriverObserver):
 
     def on_evt_tx_complete(self, ble_driver, conn_handle, **kwargs):
         self.evt_sync[conn_handle].notify(evt = BLEEvtID.evt_tx_complete, data = kwargs)
+
+    def on_gap_evt_conn_param_update(self, ble_driver, conn_handle, **kwargs):
+        self.evt_sync[conn_handle].notify(evt = BLEEvtID.gap_evt_conn_param_update, data = kwargs)
 
     def on_gattc_evt_write_rsp(self, ble_driver, conn_handle, **kwargs):
         self.evt_sync[conn_handle].notify(evt = BLEEvtID.gattc_evt_write_rsp, data = kwargs)

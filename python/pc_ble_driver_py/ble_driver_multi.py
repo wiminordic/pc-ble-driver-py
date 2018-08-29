@@ -195,6 +195,12 @@ class _ObserverMulti(object):
         self.event_q.put(_Event('on_gap_evt_conn_sec_update',
                                 conn_handle=conn_handle,
                                 conn_sec=conn_sec))
+ 
+    def on_gap_evt_lesc_dhkey_request(self, ble_driver, conn_handle, peer_public_key, oobd_req):
+        self.event_q.put(_Event('on_gap_evt_lesc_dhkey_request',
+                                conn_handle=conn_handle,
+                                peer_public_key=peer_public_key,
+                                oobd_req=oobd_req))
 
     def on_gattc_evt_write_cmd_tx_complete(self, ble_driver, conn_handle, count):
         self.event_q.put(_Event('on_gattc_evt_write_cmd_tx_complete',
@@ -360,8 +366,12 @@ class BLEDriverMulti(object):
         self.command_q.put(_Command('ble_gap_encrypt', conn_handle, master_id, enc_info))
         return self._wait_for_result()
 
-    def ble_gap_sec_params_reply(self, conn_handle, sec_status, sec_params):
-        self.command_q.put(_Command('ble_gap_sec_params_reply', conn_handle, sec_status, sec_params))
+    def ble_gap_sec_params_reply(self, conn_handle, sec_status, sec_params, keyset, p_pk_own_list=None):
+        self.command_q.put(_Command('ble_gap_sec_params_reply', conn_handle, sec_status, sec_params, keyset, p_pk_own_list))
+        return self._wait_for_result()
+
+    def ble_gap_lesc_dhkey_reply(self, conn_handle, dhkey_list):
+        self.command_q.put(_Command('ble_gap_lesc_dhkey_reply', conn_handle, dhkey_list))
         return self._wait_for_result()
 
     def ble_gap_data_length_update(self, conn_handle, data_length_params, data_length_limitation):
