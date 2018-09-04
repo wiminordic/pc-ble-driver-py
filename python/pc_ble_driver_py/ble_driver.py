@@ -56,6 +56,7 @@ from pc_ble_driver_py.observers import *
 
 #logging.basicConfig(level=logging.DEBUG)
 logger  = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 NoneType = type(None)
 driver = None
@@ -1505,6 +1506,7 @@ class BLEDriver(object):
         p_dhkey = driver.ble_gap_lesc_dhkey_t()
         dhkey_array = util.list_to_uint8_array(dhkey_list)
         p_dhkey.key = dhkey_array.cast()
+
         return driver.sd_ble_gap_lesc_dhkey_reply(self.rpc_adapter,
                                                   conn_handle,
                                                   p_dhkey)
@@ -1533,13 +1535,18 @@ class BLEDriver(object):
 
     @NordicSemiErrorCheck
     @wrapt.synchronized(api_lock)
-    def ble_gap_encrypt(self, conn_handle, master_id, enc_info):
+    def ble_gap_encrypt(self, conn_handle, master_id, enc_info, lesc):
         if not master_id or not enc_info:
             keyset = BLEGapSecKeyset.from_c(self._keyset)
-            master_id = keyset.keys_peer.enc_key.master_id
-            enc_info = keyset.keys_peer.enc_key.enc_info
+            if lesc:
+                master_id = keyset.keys_own.enc_key.master_id
+                enc_info = keyset.keys_own.enc_key.enc_info
+            else:
+                master_id = keyset.keys_peer.enc_key.master_id
+                enc_info = keyset.keys_peer.enc_key.enc_info
         assert isinstance(master_id, BLEGapMasterId), 'Invalid argument type'
         assert isinstance(enc_info, BLEGapEncInfo), 'Invalid argument type'
+        logger.info("ble_gap_encrypt. \n   master_id: {}\n   enc_info: {}".format(master_id, enc_info))
         return driver.sd_ble_gap_encrypt(self.rpc_adapter,
                                          conn_handle,
                                          master_id.to_c(),
@@ -1772,6 +1779,7 @@ class BLEDriver(object):
 
             elif evt_id == BLEEvtID.gap_evt_lesc_dhkey_request:
                 lesc_dhkey_request_evt = ble_event.evt.gap_evt.params.lesc_dhkey_request
+                self._keyset.keys_peer.p_pk = lesc_dhkey_request_evt.p_pk_peer
 
                 for obs in self.observers:
                     obs.on_gap_evt_lesc_dhkey_request(ble_driver=self,
