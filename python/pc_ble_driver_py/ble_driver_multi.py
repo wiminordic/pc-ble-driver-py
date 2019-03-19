@@ -366,6 +366,10 @@ class BLEDriverMulti(object):
         self.command_q.put(_Command('ble_gap_encrypt', conn_handle, master_id, enc_info, lesc))
         return self._wait_for_result()
 
+    def ble_gap_device_identities_set(self, pp_id_keys=None, pp_local_irks=None):
+        self.command_q.put(_Command('ble_gap_device_identities_set', pp_id_keys, pp_local_irks))
+        return self._wait_for_result()
+
     def ble_gap_sec_params_reply(self, conn_handle, sec_status, sec_params, keyset, p_pk_own_list=None):
         self.command_q.put(_Command('ble_gap_sec_params_reply', conn_handle, sec_status, sec_params, keyset, p_pk_own_list))
         return self._wait_for_result()

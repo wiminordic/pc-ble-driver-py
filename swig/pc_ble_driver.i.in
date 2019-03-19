@@ -89,6 +89,8 @@
 %array_class(char, char_array);
 %array_class(uint8_t, uint8_array);
 %array_class(uint16_t, uint16_array);
+%array_class(ble_gap_id_key_t , ble_gap_id_key_t _array);
+%array_class(ble_gap_irk_t, ble_gap_irk_t _array);
 %array_class(ble_gattc_service_t, ble_gattc_service_array);
 %array_class(ble_gattc_include_t, ble_gattc_include_array);
 %array_class(ble_gattc_char_t, ble_gattc_char_array);
