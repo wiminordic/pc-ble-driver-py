@@ -477,6 +477,7 @@ class BLEGapIdKey(object):
     def to_c(self):
         logger.critical("irk: {}".format(self.irk))
         logger.critical("id_addr_info type value: {}".format(self.id_addr_info.addr_type.value))
+        logger.critical("addr: {}".format(self.id_addr_info.addr))
         id_key                  = driver.ble_gap_id_key_t()
         irk_array               = util.list_to_uint8_array(self.irk)
         irk                     = driver.ble_gap_irk_t()
@@ -1391,14 +1392,23 @@ class BLEDriver(object):
 
     @NordicSemiErrorCheck
     @wrapt.synchronized(api_lock)
-    def ble_gap_device_identities_set(self, pp_id_keys=None, pp_local_irks=None):
-        if not pp_id_keys:
+    def ble_gap_device_identities_set(self, id_keys=None, pp_local_irks=None):
+        if id_keys is None:
+            id_keys = []
             keyset = BLEGapSecKeyset.from_c(self._keyset)
-            pp_id_keys = keyset.keys_peer.id_key
-        assert isinstance(pp_id_keys, BLEGapIdKey), 'Invalid argument type'
+            id_key = keyset.keys_peer.id_key
+            assert isinstance(id_key, BLEGapIdKey), 'Invalid argument type'
+            id_keys.append(id_key.to_c())
         logger.critical("driver.sd_ble_gap_device_identities_set !!!!!!!!!!!!!!")
+        if id_keys:
+            logger.critical("id_keys={}".format(id_keys))
+            id_keys_array = util.list_to_ble_gap_id_key_array(id_keys)
+            logger.critical("id_keys_array={}".format(id_keys_array))
+            pp_id_keys = id_keys_array.cast()
+            logger.critical("pp_id_keys={}".format(pp_id_keys))
+        
         return driver.sd_ble_gap_device_identities_set(self.rpc_adapter, 
-                                                       pp_id_keys.to_c(), 
+                                                       pp_id_keys,
                                                        pp_local_irks, 
                                                        1)
 #         return driver.sd_ble_gap_device_identities_set(self.rpc_adapter, 
@@ -1555,8 +1565,11 @@ class BLEDriver(object):
     @wrapt.synchronized(api_lock)
     def ble_gap_lesc_dhkey_reply(self, conn_handle, dhkey_list):
         p_dhkey = driver.ble_gap_lesc_dhkey_t()
+        logger.critical("dhkey_list: {}".format(dhkey_list))
         dhkey_array = util.list_to_uint8_array(dhkey_list)
+        logger.critical("dhkey_array: {}".format(dhkey_array))
         p_dhkey.key = dhkey_array.cast()
+        logger.critical("p_dhkey.key: {}".format(p_dhkey.key))
 
         return driver.sd_ble_gap_lesc_dhkey_reply(self.rpc_adapter,
                                                   conn_handle,

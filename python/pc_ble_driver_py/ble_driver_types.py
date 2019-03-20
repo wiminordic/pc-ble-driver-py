@@ -211,6 +211,12 @@ def list_to_serial_port_desc_array(data_list):
     data_array = _populate_array(data_list, ble_driver.sd_rpc_serial_port_desc_array)
     return data_array
 
+def list_to_ble_gap_id_key_array(data_list):
+    """Convert python list to ble_gap_id_key_array."""
+
+    data_array = _populate_array(data_list, ble_driver.ble_gap_id_key_t_array)
+    return data_array
+
 def _populate_array(data_list, array_type):
     length = len(data_list)
     data_array = array_type(length)
